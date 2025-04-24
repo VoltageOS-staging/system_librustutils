@@ -40,16 +40,12 @@ pub enum Error {
     /// Not an inherited file descriptor
     #[error("FD {0} is either invalid file descriptor or not an inherited one")]
     FileDescriptorNotInherited(RawFd),
-
-    /// Failed to set CLOEXEC
-    #[error("Failed to set CLOEXEC on FD {0}")]
-    FailCloseOnExec(RawFd),
 }
 
 static INHERITED_FDS: OnceLock<Mutex<HashMap<RawFd, Option<OwnedFd>>>> = OnceLock::new();
 
 /// Take ownership of all open file descriptors in this process, which later can be obtained by
-/// calling `take_fd_ownership`.
+/// calling `take_fd_ownership`. Set the FD_CLOEXEC on all of these file descriptors.
 ///
 /// # Safety
 /// This function has to be called very early in the program before the ownership of any file
@@ -78,6 +74,8 @@ pub unsafe fn init_once() -> Result<(), std::io::Error> {
             continue;
         }
 
+        fcntl(raw_fd, F_SETFD(FdFlag::FD_CLOEXEC))?;
+
         // SAFETY: /proc/self/fd/* are file descriptors that are open. If `init_once()` was called
         // at the very beginning of the program execution (as requested by the safety requirement
         // of this function), this is the first time to claim the ownership of these file
@@ -99,7 +97,6 @@ pub fn take_fd_ownership(raw_fd: RawFd) -> Result<OwnedFd, Error> {
 
     if let Some(value) = fds.get_mut(&raw_fd) {
         if let Some(owned_fd) = value.take() {
-            fcntl(raw_fd, F_SETFD(FdFlag::FD_CLOEXEC)).or(Err(Error::FailCloseOnExec(raw_fd)))?;
             Ok(owned_fd)
         } else {
             Err(Error::OwnershipTaken(raw_fd))
@@ -254,17 +251,17 @@ mod test {
         let fixture = Fixture::setup(2)?;
         let f = fixture.fds[0];
 
+        fcntl(f, F_SETFD(FdFlag::empty()))?;
+
         // SAFETY: assume files opened by Fixture are inherited ones
         unsafe {
             init_once()?;
         }
 
-        // Intentionally cleaar cloexec to see if it is set by take_fd_ownership
-        fcntl(f, F_SETFD(FdFlag::empty()))?;
-
-        let f_owned = take_fd_ownership(f)?;
-        let flags = fcntl(f_owned.as_raw_fd(), F_GETFD)?;
+        // FD_CLOEXEC should be set by init_once
+        let flags = fcntl(f.as_raw_fd(), F_GETFD)?;
         assert_eq!(flags, FdFlag::FD_CLOEXEC.bits());
+
         Ok(())
     }
 }
