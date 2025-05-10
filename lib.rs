@@ -14,6 +14,8 @@
 
 //! Android rust utilities.
 
+pub mod log;
+
 #[cfg(target_os = "android")]
 pub mod sockets;
 
