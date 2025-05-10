@@ -18,6 +18,7 @@ rust_defaults {
     rustlibs: [
         "libanyhow",
         "liblibc",
+        "liblog_rust",
         "libnix",
         "libthiserror",
     ],
