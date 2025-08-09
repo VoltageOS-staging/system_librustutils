@@ -333,13 +333,13 @@ mod test {
     #[test]
     fn parse_bool_test() {
         for s in ["1", "y", "yes", "on", "true"] {
-            assert_eq!(parse_bool(s), Some(true), "testing with {}", s);
+            assert_eq!(parse_bool(s), Some(true), "testing with {s}");
         }
         for s in ["0", "n", "no", "off", "false"] {
-            assert_eq!(parse_bool(s), Some(false), "testing with {}", s);
+            assert_eq!(parse_bool(s), Some(false), "testing with {s}");
         }
         for s in ["random", "00", "of course", "no way", "YES", "Off"] {
-            assert_eq!(parse_bool(s), None, "testing with {}", s);
+            assert_eq!(parse_bool(s), None, "testing with {s}");
         }
     }
 
