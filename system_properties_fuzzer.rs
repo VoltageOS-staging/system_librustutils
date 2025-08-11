@@ -50,7 +50,7 @@ impl fmt::Display for Property {
             Property::Unique => COUNTER.with(|counter| {
                 let val = *counter.borrow();
                 *counter.borrow_mut() += 1;
-                format!("unique.fuzz.prop.{}", val)
+                format!("unique.fuzz.prop.{val}")
             }),
             Property::Writable { prop } => prop.to_string(),
         })
