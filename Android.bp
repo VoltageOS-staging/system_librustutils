@@ -5,7 +5,8 @@ package {
 
 rust_defaults {
     name: "librustutils_defaults",
-    srcs: ["lib.rs"],
+    edition: "2024",
+    srcs: ["src/lib.rs"],
     host_supported: true,
     target: {
         android: {
@@ -165,7 +166,7 @@ rust_test {
 
 rust_fuzz {
     name: "system_properties_fuzzer",
-    srcs: ["system_properties_fuzzer.rs"],
+    srcs: ["tests/system_properties_fuzzer.rs"],
     rustlibs: [
         "libarbitrary",
         "librustutils",
